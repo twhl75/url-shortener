@@ -22,7 +22,7 @@ type URLs struct {
 
 func main() {
 	urlService := NewUrlShortener()
-	urlService.log.Println("starting server...")
+	urlService.log.Println("Starting server...")
 
 	router := http.NewServeMux()
 	router.HandleFunc("/", urlService.handleRoot)
@@ -49,7 +49,8 @@ func (u *UrlShortener) handleRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UrlShortener) createURL(w http.ResponseWriter, r *http.Request) {
-	var urls URLs
+	urls := URLs{}
+
 	err := json.NewDecoder(r.Body).Decode(&urls)
 	if err != nil {
 		u.log.Printf("Error decoding json: %v", err)
@@ -59,7 +60,7 @@ func (u *UrlShortener) createURL(w http.ResponseWriter, r *http.Request) {
 
 	err = validate(urls)
 	if err != nil {
-		u.log.Println("Error validating url: ", err)
+		u.log.Println("Error validating url:", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
