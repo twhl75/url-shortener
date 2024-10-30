@@ -5,12 +5,18 @@ import (
 	"strconv"
 )
 
-func urlGen(urls *URLs, u *UrlShortener) {
+func urlGen(u *UrlShortener, urls URLs) URLs {
+    result := URLs{}
+
 	code := rand.IntN(1000)
-	urls.Shortened = u.cfg.domainName + "/" + strconv.Itoa(code)
+
+    result.Original = urls.Original
+	result.Shortened = u.cfg.domainName + "/" + strconv.Itoa(code)
+
+    return result
 }
 
-func idGen(urls *URLs, u *UrlShortener) int {
+func idGen(u *UrlShortener) int {
 	id := 1
     exists := true
 
@@ -18,7 +24,6 @@ func idGen(urls *URLs, u *UrlShortener) int {
         id = rand.IntN(1000)
         _, exists = u.db[id]
     }
-    u.db[id] = *urls
 
 	return id
 }

@@ -64,8 +64,11 @@ func (u *UrlShortener) createURL(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    urlGen(&urls, u)
-    id := idGen(&urls, u)
+    urlsShortened := urlGen(u, urls)
+    id := idGen(u)
+
+    // Store in DB
+    u.db[id] = urlsShortened
 
     message := "Get shortened url at localhost:8080/urls/" + strconv.Itoa(id)
     _, err = w.Write([]byte(message))
