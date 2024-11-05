@@ -1,11 +1,11 @@
-package main
+package config
 
 type Config struct {
-	domainName string
+	DomainName string
 }
 
 func NewConfig(domainName string) Config {
 	return Config{
-		domainName: domainName,
+		DomainName: domainName,
 	}
 }

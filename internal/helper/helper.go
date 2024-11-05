@@ -1,12 +1,13 @@
-package main
+package helper
 
 import (
 	"github.com/pkg/errors"
+	"github.com/twhl75/url-shortener/internal/models"
 )
 
-func validate(structObj interface{}) error {
+func Validate(structObj interface{}) error {
 	switch structObj := structObj.(type) {
-	case URLs:
+	case models.URLs:
 		return validateEmptyURL(structObj.Original)
 	default:
 		return errors.New("unsupported type")
