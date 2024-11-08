@@ -5,12 +5,14 @@ import (
 	"os"
 
 	"github.com/twhl75/url-shortener/internal/controller"
+	"github.com/twhl75/url-shortener/internal/database"
 	"github.com/twhl75/url-shortener/internal/service"
 )
 
-
 func run() error {
-	service := service.NewService()
+	database := database.ConnectDatabase()
+
+	service := service.NewService(database)
 
 	controller := controller.New(service)
 
@@ -21,10 +23,7 @@ func run() error {
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		os.Exit(1)
 	}
 }
-
-
-

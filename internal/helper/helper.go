@@ -7,7 +7,7 @@ import (
 
 func Validate(structObj interface{}) error {
 	switch structObj := structObj.(type) {
-	case models.URLs:
+	case models.URL:
 		return validateEmptyURL(structObj.Original)
 	default:
 		return errors.New("unsupported type")

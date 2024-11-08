@@ -20,9 +20,9 @@ func New(svc service.Service) Controller {
 func (c *Controller) Run(){
 	router := http.NewServeMux()
 	router.HandleFunc("/", c.svc.HandleRoot)
-	router.HandleFunc("POST /urls",c.svc.CreateURL)
-	router.HandleFunc("GET /urls", c.svc.GetAllURLs)
-	router.HandleFunc("GET /urls/{id}", c.svc.GetShortenedURL)
+	router.HandleFunc("POST /url",c.svc.CreateURL)
+	router.HandleFunc("GET /url", c.svc.GetAllURLs)
+	router.HandleFunc("GET /url/{id}", c.svc.GetShortenedURL)
 
 	err := http.ListenAndServe(":8080", router)
 	if err != nil {

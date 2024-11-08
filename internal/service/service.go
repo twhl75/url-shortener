@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -14,14 +15,14 @@ import (
 
 
 type Service struct {
-	db  map[int]models.URLs
+	db  *sql.DB
 	cfg config.Config
 	log *log.Logger
 }
 
-func NewService() Service {
+func NewService(database *sql.DB) Service {
 	return Service{
-		db:  make(map[int]models.URLs),
+		db:  database,
 		cfg: config.NewConfig("terence.liu"),
 		log: log.New(os.Stdout, "LOG:", log.Lshortfile|log.Ldate),
 	}
@@ -33,29 +34,40 @@ func (s *Service) HandleRoot(w http.ResponseWriter, r *http.Request) {
 
 
 func (s *Service) CreateURL(w http.ResponseWriter, r *http.Request) {
-	urls := models.URLs{}
+	url := models.URL{}
 
-	err := json.NewDecoder(r.Body).Decode(&urls)
+	err := json.NewDecoder(r.Body).Decode(&url)
 	if err != nil {
 		s.log.Printf("Error decoding json: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = helper.Validate(urls)
+	err = helper.Validate(url)
 	if err != nil {
 		s.log.Println("Error validating url:", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	urlsShortened := urlGen(s.cfg.DomainName, urls)
-	id := idGen(s.db)
+	url = urlGen(s.cfg.DomainName, url)
 
-	// Store in DB
-	s.db[id] = urlsShortened
+	result, err := s.db.Exec("INSERT INTO url (original, shortened) VALUES (?, ?)", url.Original, url.Shortened)
+	if err != nil {
+		s.log.Println("Error querying:", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	message := "Get shortened url at localhost:8080/urls/" + strconv.Itoa(id)
+	id, err := result.LastInsertId()
+	if err != nil {
+		s.log.Println("Error retrieving id:", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	
+
+	message := "Get shortened url at localhost:8080/urls/" + strconv.Itoa(int(id))
 	_, err = w.Write([]byte(message))
 	if err != nil {
 		s.log.Printf("Error writing response: %v", err)
@@ -71,13 +83,16 @@ func (s *Service) GetShortenedURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	val, exists := s.db[id]
-	if !exists {
-		s.log.Printf("Error getting URLs: url does not exist")
-		http.Error(w, "url does not exist", http.StatusBadRequest)
+	url := models.URL{}
+
+	row := s.db.QueryRow("SELECT * FROM url WHERE ID = ?", id)
+	if err := row.Scan(&url.ID, &url.Original, &url.Shortened); err != nil {
+		s.log.Printf("Error scanning queried row: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	_, err = w.Write([]byte(val.Shortened))
+	_, err = w.Write([]byte(url.Shortened))
 	if err != nil {
 		s.log.Printf("Error writing response: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -85,7 +100,26 @@ func (s *Service) GetShortenedURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) GetAllURLs(w http.ResponseWriter, r *http.Request) {
-	jsonStr, err := json.Marshal(s.db)
+	urls := []models.URL{}
+
+	rows, err := s.db.Query("SELECT * FROM url")
+	if err != nil {
+		s.log.Printf("Error querying: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	for rows.Next() {
+		url := models.URL{}
+		if err := rows.Scan(&url.ID, &url.Original, &url.Shortened); err != nil {
+			s.log.Printf("Error scanning queried rows: %v", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		urls = append(urls, url)
+	}
+
+	jsonStr, err := json.Marshal(urls)
 	if err != nil {
 		s.log.Printf("Error marshaling json: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
