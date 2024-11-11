@@ -1,6 +1,6 @@
 # url-shortener
 
-- Simple url shortener service
+Simple url shortener service
 
 ## Setup
 
