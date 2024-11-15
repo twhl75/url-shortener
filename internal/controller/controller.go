@@ -17,14 +17,15 @@ func New(svc service.Service) Controller {
 	}
 }
 
-func (c *Controller) Run(){
-	router := http.NewServeMux()
-	router.HandleFunc("/", c.svc.HandleRoot)
-	router.HandleFunc("POST /url",c.svc.CreateURL)
-	router.HandleFunc("GET /url", c.svc.GetAllURLs)
-	router.HandleFunc("GET /url/{id}", c.svc.GetShortenedURL)
+func (c *Controller) Run() {
+	mux := http.NewServeMux()
 
-	err := http.ListenAndServe(":8080", router)
+	mux.HandleFunc("/", c.svc.HandleRoot)
+	mux.HandleFunc("POST /url", c.svc.CreateURL)
+	mux.HandleFunc("GET /url", c.svc.GetAllURLs)
+	mux.HandleFunc("GET /url/{id}", c.svc.GetShortenedURL)
+
+	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Printf("server failed to listen: %v", err)
 	}
