@@ -4,19 +4,18 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/go-sql-driver/mysql"
 )
 
 func ConnectDatabase() *sql.DB {
 	cfg := mysql.Config{
-        User:   os.Getenv("DBUSER"),
-        Passwd: os.Getenv("DBPASS"),
-        Net:    "tcp",
-        Addr:   "127.0.0.1:3306",
-        DBName: "urlDB",
-    }
+		Net:    "tcp",
+		Addr:   "mysql:3306",
+		DBName: "urlDB",
+		User:   "root",
+		Passwd: "password",
+	}
 
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
