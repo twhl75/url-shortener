@@ -50,7 +50,7 @@ func (s *Service) CreateURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url = urlGen(s.cfg.DomainName, url)
+	url = shortenedGen(url)
 
 	result, err := s.db.Exec("INSERT INTO url (original, shortened) VALUES (?, ?)", url.Original, url.Shortened)
 	if err != nil {
@@ -92,7 +92,7 @@ func (s *Service) GetShortenedURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = w.Write([]byte(url.Shortened))
+	_, err = w.Write([]byte(s.cfg.DomainName + "/" + url.Shortened))
 	if err != nil {
 		s.log.Printf("Error writing response: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
